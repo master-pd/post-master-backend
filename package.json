@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "description": "Video sharing platform backend with PostgreSQL",
   "main": "dist/server.js",
+  "engines": {
+    "node": "20.x",
+    "npm": "10.x"
+  },
   "scripts": {
     "dev": "nodemon src/server.ts",
     "build": "tsc",
@@ -52,15 +56,5 @@
     "prettier": "^3.0.3",
     "ts-node": "^10.9.1",
     "typescript": "^5.2.2"
-  }
-}
-
-{
-  "scripts": {
-    "setup": "npm install && npx prisma generate && npx prisma migrate dev --name init",
-    "dev": "nodemon src/server.ts",
-    "build": "tsc",
-    "start": "node dist/server.js",
-    "deploy": "git push && echo 'Check your hosting platform for auto-deploy'"
   }
 }
