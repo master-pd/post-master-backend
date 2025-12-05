@@ -1,0 +1,301 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_DATABASE_URL")
+}
+
+// User Model
+model User {
+  id                 String    @id @default(cuid())
+  username           String    @unique
+  email              String    @unique
+  password           String
+  fullName           String
+  bio                String?   @default("")
+  profilePicture     String?   @default("")
+  coverPicture       String?   @default("")
+  isVerified         Boolean   @default(false)
+  verificationToken  String?
+  verificationTokenExpires DateTime?
+  resetPasswordToken String?
+  resetPasswordExpires DateTime?
+  lastLogin          DateTime?
+  isActive           Boolean   @default(true)
+  role               Role      @default(USER)
+  
+  // Relations
+  followers          Follow[]  @relation("following")
+  following          Follow[]  @relation("followers")
+  videos             Video[]
+  likedVideos        Like[]
+  savedVideos        SavedVideo[]
+  comments           Comment[]
+  notificationsSent  Notification[] @relation("sender")
+  notificationsReceived Notification[] @relation("recipient")
+  
+  // Settings
+  privateAccount     Boolean   @default(false)
+  emailNotifications Boolean   @default(true)
+  pushNotifications  Boolean   @default(true)
+  
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  
+  @@index([email])
+  @@index([username])
+  @@index([createdAt])
+}
+
+// Follow relationship (many-to-many)
+model Follow {
+  id           String   @id @default(cuid())
+  followerId   String
+  followingId  String
+  createdAt    DateTime @default(now())
+  
+  follower     User     @relation("followers", fields: [followerId], references: [id])
+  following    User     @relation("following", fields: [followingId], references: [id])
+  
+  @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
+  @@index([createdAt])
+}
+
+// Video Model
+model Video {
+  id                String   @id @default(cuid())
+  title             String
+  description       String?  @default("")
+  videoUrl          String
+  thumbnailUrl      String
+  duration          Float
+  size              Int
+  format            String
+  resolution        String   @default("1920x1080")
+  
+  // Relations
+  userId            String
+  user              User     @relation(fields: [userId], references: [id])
+  likes             Like[]
+  comments          Comment[]
+  savedBy           SavedVideo[]
+  shares            Share[]
+  views             View[]
+  
+  // Metadata
+  tags              String[]
+  category          Category @default(OTHER)
+  isPublic          Boolean  @default(true)
+  isCommentsEnabled Boolean  @default(true)
+  isDownloadable    Boolean  @default(false)
+  
+  // Processing status
+  status            VideoStatus @default(PROCESSING)
+  processingProgress Int      @default(0)
+  uploadedAt        DateTime @default(now())
+  publishedAt       DateTime?
+  
+  // Location (using PostGIS if needed)
+  latitude          Float?
+  longitude         Float?
+  locationName      String?
+  
+  // Video metadata
+  width             Int?
+  height            Int?
+  aspectRatio       String?
+  frameRate         Float?
+  bitrate           Int?
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([category])
+  @@index([status])
+  @@index([createdAt])
+  @@index([publishedAt])
+  @@fulltext([title, description, tags])
+}
+
+// Like Model
+model Like {
+  id        String   @id @default(cuid())
+  userId    String
+  videoId   String
+  createdAt DateTime @default(now())
+  
+  user      User     @relation(fields: [userId], references: [id])
+  video     Video    @relation(fields: [videoId], references: [id])
+  
+  @@unique([userId, videoId])
+  @@index([videoId])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+// Comment Model
+model Comment {
+  id             String   @id @default(cuid())
+  content        String
+  userId         String
+  videoId        String
+  parentCommentId String?
+  
+  // Relations
+  user           User     @relation(fields: [userId], references: [id])
+  video          Video    @relation(fields: [videoId], references: [id])
+  parentComment  Comment? @relation("CommentReplies", fields: [parentCommentId], references: [id])
+  replies        Comment[] @relation("CommentReplies")
+  likes          CommentLike[]
+  
+  // Metadata
+  isEdited       Boolean  @default(false)
+  editedAt       DateTime?
+  isPinned       Boolean  @default(false)
+  pinnedAt       DateTime?
+  ipAddress      String?
+  userAgent      String?
+  
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  
+  @@index([videoId])
+  @@index([userId])
+  @@index([parentCommentId])
+  @@index([createdAt])
+  @@index([isPinned])
+}
+
+// Comment Like Model
+model CommentLike {
+  id        String   @id @default(cuid())
+  userId    String
+  commentId String
+  createdAt DateTime @default(now())
+  
+  user      User     @relation(fields: [userId], references: [id])
+  comment   Comment  @relation(fields: [commentId], references: [id])
+  
+  @@unique([userId, commentId])
+  @@index([commentId])
+  @@index([userId])
+}
+
+// Saved Video Model
+model SavedVideo {
+  id        String   @id @default(cuid())
+  userId    String
+  videoId   String
+  createdAt DateTime @default(now())
+  
+  user      User     @relation(fields: [userId], references: [id])
+  video     Video    @relation(fields: [videoId], references: [id])
+  
+  @@unique([userId, videoId])
+  @@index([userId])
+  @@index([videoId])
+  @@index([createdAt])
+}
+
+// Share Model
+model Share {
+  id        String   @id @default(cuid())
+  userId    String
+  videoId   String
+  platform  String?  // facebook, twitter, whatsapp, etc.
+  createdAt DateTime @default(now())
+  
+  user      User     @relation(fields: [userId], references: [id])
+  video     Video    @relation(fields: [videoId], references: [id])
+  
+  @@index([videoId])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+// View Model
+model View {
+  id        String   @id @default(cuid())
+  userId    String?
+  videoId   String
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  
+  user      User?    @relation(fields: [userId], references: [id])
+  video     Video    @relation(fields: [videoId], references: [id])
+  
+  @@index([videoId])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+// Notification Model
+model Notification {
+  id          String   @id @default(cuid())
+  recipientId String
+  senderId    String?
+  type        NotificationType
+  
+  // Relations
+  recipient   User     @relation("recipient", fields: [recipientId], references: [id])
+  sender      User?    @relation("sender", fields: [senderId], references: [id])
+  
+  // Data
+  videoId     String?
+  commentId   String?
+  message     String?
+  metadata    Json?    @default("{}")
+  
+  read        Boolean  @default(false)
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([recipientId])
+  @@index([senderId])
+  @@index([type])
+  @@index([read])
+  @@index([createdAt])
+}
+
+// Enums
+enum Role {
+  USER
+  MODERATOR
+  ADMIN
+}
+
+enum Category {
+  ENTERTAINMENT
+  EDUCATION
+  SPORTS
+  MUSIC
+  GAMING
+  COMEDY
+  LIFESTYLE
+  NEWS
+  OTHER
+}
+
+enum VideoStatus {
+  PROCESSING
+  READY
+  FAILED
+}
+
+enum NotificationType {
+  LIKE
+  COMMENT
+  FOLLOW
+  MENTION
+  SHARE
+  NEW_VIDEO
+  SYSTEM
+}
