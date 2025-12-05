@@ -1,6 +1,6 @@
 # Post-Master Backend
 
-A high-performance video sharing platform backend built with Node.js, TypeScript, Express, and MongoDB.
+A high-performance video sharing platform backend built with Node.js, TypeScript, Express, and NEONDB.
 
 ## 📋 Features
 
