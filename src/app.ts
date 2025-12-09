@@ -1,3 +1,5 @@
+// src/app.ts
+
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -35,7 +37,7 @@ app.use(morgan('combined', {
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  max: 100,
   message: 'Too many requests from this IP, please try again later.'
 });
 app.use('/api/', limiter);
@@ -48,7 +50,7 @@ app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 app.use('/uploads', express.static('uploads'));
 
 // Health check
-app.get('/health', (req, res) => {
+app.get('/health', (_req, res) => {
   res.status(200).json({ 
     status: 'OK', 
     timestamp: new Date().toISOString(),
@@ -64,10 +66,10 @@ app.use('/api/v1/feed', feedRoutes);
 app.use('/api/v1/comments', commentRoutes);
 
 // 404 handler
-app.use('*', (req, res) => {
+app.use('*', (_req, res) => {
   res.status(404).json({
     success: false,
-    message: `Route ${req.originalUrl} not found`
+    message: `Route ${_req.originalUrl} not found`
   });
 });
 
