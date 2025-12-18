@@ -1,0 +1,25 @@
+{
+  "name": "post",
+  "version": "1.0.0",
+  "description": "Post creation and management feature",
+  "enabled": true,
+  "requires": ["database", "redis", "cloudinary"],
+  "events": [
+    "post.created",
+    "post.updated",
+    "post.deleted",
+    "post.liked",
+    "post.unliked",
+    "comment.created"
+  ],
+  "routes": [
+    "/posts",
+    "/posts/:id",
+    "/posts/:slug",
+    "/posts/:id/upload",
+    "/posts/:id/like",
+    "/posts/:id/comments"
+  ],
+  "author": "Post-Master Team",
+  "license": "MIT"
+}
