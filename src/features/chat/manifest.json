@@ -1,0 +1,18 @@
+{
+  "name": "chat",
+  "version": "1.0.0",
+  "description": "Real-time chat feature with Socket.IO",
+  "enabled": true,
+  "requires": ["database", "socket.io"],
+  "events": [
+    "chat.message.sent"
+  ],
+  "routes": [
+    "/chat/conversations",
+    "/chat/messages/:userId",
+    "/chat/users/search",
+    "/chat/conversations/:userId"
+  ],
+  "author": "Post-Master Team",
+  "license": "MIT"
+}
